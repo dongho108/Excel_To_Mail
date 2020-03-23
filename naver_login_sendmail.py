@@ -1,3 +1,9 @@
+#필요한 기능
+# 1. 엑셀파일에 있는 여러사람의 데이터(메일)에 보내기
+ # ->되는데, 이전메일발송처리중이뜸 캡챠같음
+# 2. 파일첨부하기
+
+
 from selenium import webdriver
 import time
 from bs4 import BeautifulSoup
@@ -35,11 +41,10 @@ def go_to_mailsend():
     driver.find_element_by_xpath('//*[@id="nav_snb"]/div[1]/a[1]/strong/span').click()
     time.sleep(1)
 
-
-def send_mail():
+def append_xl():
     wb = xl.load_workbook('/usr/local/bin/주문내역.xlsx')
     ws = wb.active
-    lst = []
+    global lst
     for r in ws.rows:
         if r[0].value is None: #빈 셀 건너 뛰기
             continue
@@ -48,7 +53,10 @@ def send_mail():
             lst[-1].append(c.value)
         print(lst[-1])
     lst.pop(0)
+def send_mail():
+    global lst
     for i in lst:
+        go_to_mailsend()
         pyperclip.copy(i[-1])
         gui.hotkey('command', 'v')
         time.sleep(1)
@@ -62,7 +70,7 @@ def send_mail():
         # time.sleep(2)
         gui.hotkey('tab')
         pyperclip.copy('''
-        안녕하세. {}님. 동호 마켓입니다.
+        안녕하세요. {}님. 동호 마켓입니다.
         {}-{}-{}에 주문하신 제품에 대해 안내드립니다.
 
         제품명 : {}
@@ -73,6 +81,7 @@ def send_mail():
         gui.hotkey('command', 'v')
         time.sleep(1)
         driver.find_element_by_xpath('//*[@id="sendBtn"]').click()
+        time.sleep(2)
 
 def request_webpage():
     driver.get('https://mail.naver.com/')
@@ -82,13 +91,13 @@ def naver_stuff():
     load_login_page()
     try_login()
     request_webpage()
-    go_to_mailsend()
+    append_xl()
     send_mail()
 
+# main
 myId = NAVER["id"]
 myPass = NAVER["password"]
-
-# if __name__ = "__main__":
 driver = load_driver()
+lst = []
 naver_stuff()
 prevent_close()
